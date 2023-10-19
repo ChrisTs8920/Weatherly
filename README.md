@@ -12,7 +12,7 @@ Icons provided by:
 
 ## Features
 
-- Current weather using the main screen
+- Current weather
 - Five day forecast (work in progress)
 - Settings / About screen (upcoming)
 
