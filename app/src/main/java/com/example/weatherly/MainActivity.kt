@@ -241,10 +241,6 @@ fun Forecast(input: String, dataEffect: Boolean) {
         mutableStateOf(data)
     }
 
-    var dataRead by remember {
-        mutableStateOf(false)
-    }
-
     val icons by remember {
         mutableStateOf(mutableListOf(R.drawable._01d, R.drawable._01d, R.drawable._01d, R.drawable._01d, R.drawable._01d))
     }
@@ -286,7 +282,6 @@ fun Forecast(input: String, dataEffect: Boolean) {
                 "50n" -> icons[j] = R.drawable._50d
             }
         }
-        dataRead = true
     }
 
     Column(modifier = Modifier
@@ -300,13 +295,13 @@ fun Forecast(input: String, dataEffect: Boolean) {
             style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(10.dp))
         for (j in 0..< icons.size) {
-            ForecastItem(data, icons[j], j * 8, dataRead, dayString[j])
+            ForecastItem(data, icons[j], j * 8, dayString[j])
         }
     }
 }
 
 @Composable
-fun ForecastItem(data: WeatherApi.ForecastJsonData, icon: Int, it: Int, dataRead: Boolean, day: String) {
+fun ForecastItem(data: WeatherApi.ForecastJsonData, icon: Int, it: Int, day: String) {
     Surface(shape = MaterialTheme.shapes.small,
         shadowElevation = 2.dp,
         color = MaterialTheme.colorScheme.primaryContainer,
@@ -314,17 +309,15 @@ fun ForecastItem(data: WeatherApi.ForecastJsonData, icon: Int, it: Int, dataRead
         modifier = Modifier
             .fillMaxWidth()
             .padding(5.dp)) {
-        if (dataRead) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(painter = painterResource(id = icon),
-                    contentDescription = "Weather")
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(data.list[it].weather[0].main, modifier = Modifier.weight(0.4F))
-                Spacer(modifier = Modifier.width(40.dp))
-                Text(day, modifier = Modifier.weight(0.4F))
-                Spacer(modifier = Modifier.width(80.dp))
-                Text(data.list[it].main.temp.roundToInt().toString() + "°C", modifier = Modifier.weight(0.2F))
-            }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(painter = painterResource(id = icon),
+                contentDescription = "Weather")
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(data.list[it].weather[0].main, modifier = Modifier.weight(0.4F))
+            Spacer(modifier = Modifier.width(40.dp))
+            Text(day, modifier = Modifier.weight(0.4F))
+            Spacer(modifier = Modifier.width(80.dp))
+            Text(data.list[it].main.temp.roundToInt().toString() + "°C", modifier = Modifier.weight(0.2F))
         }
     }
 }
@@ -597,7 +590,7 @@ fun ForecastItemPreview() {
         ) {
             ForecastItem(data = WeatherApi.forecastDummyData(),
                 icon = R.drawable._01d,
-                it = 0, dataRead = true,
+                it = 0,
                 "Friday")
         }
     }
