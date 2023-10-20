@@ -308,11 +308,14 @@ fun Forecast(data: WeatherApi.ForecastJsonData) {
 fun ForecastItem(data: WeatherApi.ForecastJsonData, icon: Int, it: Int, day: String) {
     Surface(shape = MaterialTheme.shapes.small,
         shadowElevation = 2.dp,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        color = if ((it / 8) % 2 == 0) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = if ((it / 8) % 2 == 0) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+        //color = MaterialTheme.colorScheme.surfaceVariant,
+        //contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(5.dp)) {
+            .padding(5.dp)
+            .height(50.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(painter = painterResource(id = icon),
                 contentDescription = "Weather")
@@ -402,7 +405,7 @@ fun InputText(input: String, onValueChange: (String) -> Unit, onDone: (Unit) -> 
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         colors = TextFieldDefaults.outlinedTextFieldColors(
             containerColor = MaterialTheme.colorScheme.surface,
-            textColor = MaterialTheme.colorScheme.onSurface,
+            textColor = MaterialTheme.colorScheme.tertiary,
             unfocusedBorderColor = MaterialTheme.colorScheme.tertiary,
             focusedBorderColor = MaterialTheme.colorScheme.tertiary,
             unfocusedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -456,8 +459,8 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
     Row {
         Surface(shape = MaterialTheme.shapes.small,
             shadowElevation = 2.dp,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = MaterialTheme.colorScheme.tertiaryContainer,
+            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
             modifier = Modifier
                 .weight(0.5F)
                 .padding(5.dp)) {
@@ -476,8 +479,8 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
         }
         Surface(shape = MaterialTheme.shapes.small,
             shadowElevation = 2.dp,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = MaterialTheme.colorScheme.tertiaryContainer,
+            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
             modifier = Modifier
                 .weight(0.5F)
                 .padding(5.dp)) {
@@ -498,8 +501,8 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
     Row {
         Surface(shape = MaterialTheme.shapes.small,
             shadowElevation = 2.dp,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier
                 .weight(0.5F)
                 .padding(5.dp)) {
@@ -519,8 +522,8 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
         }
         Surface(shape = MaterialTheme.shapes.small,
             shadowElevation = 2.dp,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier
                 .weight(0.5F)
                 .padding(5.dp)) {
