@@ -111,6 +111,10 @@ fun App() {
         mutableStateOf(WeatherApi.forecastDummyData())
     }
 
+    var prevForecastData by remember {
+        mutableStateOf(WeatherApi.forecastDummyData())
+    }
+
     val formatter by remember {
         mutableStateOf(DateTimeFormatter.ofPattern("HH:mm"))
     }
@@ -156,10 +160,14 @@ fun App() {
         //showShimmer = true
         //showContent = 0F
         prevData = homeData
+        prevForecastData = forecastData
+
         homeData = WeatherApi.readMainData(input)
         forecastData = WeatherApi.readForecastData(input)
+
         if (homeData == WeatherApi.dummyData()) { // In case of readData failure(i.e provided City does not exist), keep previous data
             homeData = prevData
+            forecastData = prevForecastData
             input = prevInput
         } else {
             prevInput = input
