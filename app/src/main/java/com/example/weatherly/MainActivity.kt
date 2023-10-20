@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -62,7 +61,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.weatherly.ui.theme.WeatherlyTheme
-import java.time.DayOfWeek
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -97,12 +95,20 @@ fun App() {
         mutableStateOf("Athens")
     }
 
-    var data by remember {
+    var prevInput by remember {
+        mutableStateOf(input)
+    }
+
+    var homeData by remember {
         mutableStateOf(WeatherApi.dummyData())
     }
 
     var prevData by remember {
-        mutableStateOf(data)
+        mutableStateOf(homeData)
+    }
+
+    var forecastData by remember {
+        mutableStateOf(WeatherApi.forecastDummyData())
     }
 
     val formatter by remember {
@@ -111,23 +117,23 @@ fun App() {
 
     // Set Sunset, Sunrise and updatedOn to appropriate format and time zone.
     var sunriseTime by remember {
-        mutableStateOf(ZonedDateTime.ofInstant(Instant.ofEpochSecond(data.sys.sunrise.toLong()), ZoneId.of("UTC")))
+        mutableStateOf(ZonedDateTime.ofInstant(Instant.ofEpochSecond(homeData.sys.sunrise.toLong()), ZoneId.of("UTC")))
     }
 
     var sunsetTime by remember {
-        mutableStateOf(ZonedDateTime.ofInstant(Instant.ofEpochSecond(data.sys.sunset.toLong()), ZoneId.of("UTC")))
+        mutableStateOf(ZonedDateTime.ofInstant(Instant.ofEpochSecond(homeData.sys.sunset.toLong()), ZoneId.of("UTC")))
     }
 
     var updatedOnTime by remember {
-        mutableStateOf(Instant.ofEpochSecond(data.dt.toLong()).atZone(ZoneId.systemDefault()))
+        mutableStateOf(Instant.ofEpochSecond(homeData.dt.toLong()).atZone(ZoneId.systemDefault()))
     }
 
     var sunriseZone by remember {
-        mutableStateOf(sunriseTime.withZoneSameInstant(ZoneOffset.ofHours(data.timezone / 3600)))
+        mutableStateOf(sunriseTime.withZoneSameInstant(ZoneOffset.ofHours(homeData.timezone / 3600)))
     }
 
     var sunsetZone by remember {
-        mutableStateOf(sunsetTime.withZoneSameInstant(ZoneOffset.ofHours(data.timezone / 3600)))
+        mutableStateOf(sunsetTime.withZoneSameInstant(ZoneOffset.ofHours(homeData.timezone / 3600)))
     }
 
     var currIcon by remember {
@@ -149,21 +155,25 @@ fun App() {
     LaunchedEffect(dataEffect) {
         //showShimmer = true
         //showContent = 0F
-        prevData = data
-        data = WeatherApi.readMainData(input)
-        if (data == WeatherApi.dummyData()) { // In case of readData failure(i.e provided City does not exist), keep previous data
-            data = prevData
+        prevData = homeData
+        homeData = WeatherApi.readMainData(input)
+        forecastData = WeatherApi.readForecastData(input)
+        if (homeData == WeatherApi.dummyData()) { // In case of readData failure(i.e provided City does not exist), keep previous data
+            homeData = prevData
+            input = prevInput
+        } else {
+            prevInput = input
         }
 
         // Update time Zones
-        updatedOnTime = Instant.ofEpochSecond(data.dt.toLong()).atZone(ZoneId.systemDefault())
-        sunriseTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(data.sys.sunrise.toLong()), ZoneId.of("UTC"))
-        sunsetTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(data.sys.sunset.toLong()), ZoneId.of("UTC"))
-        sunriseZone = sunriseTime.withZoneSameInstant(ZoneOffset.ofHours(data.timezone / 3600))
-        sunsetZone = sunsetTime.withZoneSameInstant(ZoneOffset.ofHours(data.timezone / 3600))
+        updatedOnTime = Instant.ofEpochSecond(homeData.dt.toLong()).atZone(ZoneId.systemDefault())
+        sunriseTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(homeData.sys.sunrise.toLong()), ZoneId.of("UTC"))
+        sunsetTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(homeData.sys.sunset.toLong()), ZoneId.of("UTC"))
+        sunriseZone = sunriseTime.withZoneSameInstant(ZoneOffset.ofHours(homeData.timezone / 3600))
+        sunsetZone = sunsetTime.withZoneSameInstant(ZoneOffset.ofHours(homeData.timezone / 3600))
 
         // Update weather Icon
-        when (data.weather[0].icon) {
+        when (homeData.weather[0].icon) {
             "01d" -> currIcon = R.drawable._01d
             "01n" -> currIcon = R.drawable._01d
             "02d" -> currIcon = R.drawable._02d
@@ -190,7 +200,7 @@ fun App() {
     val navController = rememberNavController()
     Scaffold(
         topBar = {
-            TopBar(data)
+            TopBar(homeData)
         },
         bottomBar = {
             BottomBar(navController = navController)
@@ -210,10 +220,10 @@ fun App() {
                             dataEffect = !dataEffect
                         }
                         Spacer(modifier = Modifier.height(105.dp))
-                        PrimaryStats(data = data, currIcon = currIcon)
+                        PrimaryStats(data = homeData, currIcon = currIcon)
                         Spacer(modifier = Modifier.height(105.dp))
                         SecondaryStats(
-                            data = data,
+                            data = homeData,
                             formatter = formatter,
                             sunriseZone = sunriseZone,
                             sunsetZone = sunsetZone,
@@ -222,7 +232,7 @@ fun App() {
                     }
                 }
                 composable(Screen.Forecast.route) {
-                    Forecast(input, dataEffect)
+                    Forecast(forecastData)
                 }
                 composable(Screen.Settings.route) {
                     Settings()
@@ -232,15 +242,7 @@ fun App() {
 }
 
 @Composable
-fun Forecast(input: String, dataEffect: Boolean) {
-    var data by remember {
-        mutableStateOf(WeatherApi.forecastDummyData())
-    }
-
-    var prevData by remember {
-        mutableStateOf(data)
-    }
-
+fun Forecast(data: WeatherApi.ForecastJsonData) {
     val icons by remember {
         mutableStateOf(mutableListOf(R.drawable._01d, R.drawable._01d, R.drawable._01d, R.drawable._01d, R.drawable._01d))
     }
@@ -249,13 +251,7 @@ fun Forecast(input: String, dataEffect: Boolean) {
         mutableStateOf(mutableListOf("Friday", "Friday", "Friday", "Friday", "Friday"))
     }
 
-    LaunchedEffect(dataEffect) {
-        prevData = data
-        data = WeatherApi.readForecastData(input)
-        if (data == WeatherApi.forecastDummyData()) { // In case of readData failure(i.e provided City does not exist), keep previous data
-            data = prevData
-        }
-
+    LaunchedEffect(Unit) {
         for ((i, j) in (0..< icons.size).withIndex()) {
             // Setup days
             val day = ZonedDateTime.ofInstant(Instant.ofEpochSecond(data.list[i * 8].dt.toLong()), ZoneOffset.UTC).dayOfWeek

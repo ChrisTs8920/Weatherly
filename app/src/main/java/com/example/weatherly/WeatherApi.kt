@@ -196,7 +196,7 @@ object WeatherApi {
     }
 
     fun forecastDummyData(): ForecastJsonData {
-        val temp = List<ListData>(40) {ListData(0,
+        val temp = List(40) {ListData(0,
             MainData(0.0, 0.0, 0.0, 0.0, 0, 0),
             listOf(WeatherData(0, "", "", "01d")),
             CloudData(0.0),
@@ -207,7 +207,7 @@ object WeatherApi {
             0,
             0,
             "")}.toMutableList()
-        for (i in 0..<40) {
+        for (i in 0..< temp.size) {
             temp[i] = (ListData(0,
                 MainData(0.0, 0.0, 0.0, 0.0, 0, 0),
                 listOf(WeatherData(0, "", "", "01d")),
@@ -221,17 +221,7 @@ object WeatherApi {
                 ""))
         }
         return ForecastJsonData(
-            list = temp/*listOf(ListData(0,
-                MainData(0.0, 0.0, 0.0, 0.0, 0, 0),
-                listOf(WeatherData(0, "", "", "01d")),
-                CloudData(0.0),
-                WindData(0.0, 0),
-                0,
-                0.0,
-                0,
-                0,
-                0,
-                ""))*/,
+            list = temp,
             city = CityData(0, "", "", "", 0, 0, 0, 0)
         )
     }
