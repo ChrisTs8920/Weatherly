@@ -3,6 +3,7 @@ package com.example.weatherly
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -32,6 +33,9 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchColors
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
@@ -148,6 +152,11 @@ fun App() {
         mutableStateOf(false)
     }
 
+    var atSettings by remember {
+        mutableStateOf(false)
+    }
+
+    val navController = rememberNavController()
     //var showShimmer by remember {
         //mutableStateOf(true)
     //}
@@ -205,13 +214,14 @@ fun App() {
         //showContent = 255F
     }
 
-    val navController = rememberNavController()
     Scaffold(
         topBar = {
-            TopBar(homeData)
+            TopBar(homeData, atSettings)
         },
         bottomBar = {
-            BottomBar(navController = navController)
+            BottomBar(navController) {
+                atSettings = navController.currentDestination?.route == Screen.Settings.route
+            }
         }
     ) {
             innerPadding -> NavHost(navController, Screen.Main.route, Modifier.padding(innerPadding)) {
@@ -227,9 +237,9 @@ fun App() {
                         InputText(input = input, onValueChange = { input = it }) {
                             dataEffect = !dataEffect
                         }
-                        Spacer(modifier = Modifier.height(105.dp))
+                        Spacer(modifier = Modifier.weight(1f))
                         PrimaryStats(data = homeData, currIcon = currIcon)
-                        Spacer(modifier = Modifier.height(105.dp))
+                        Spacer(modifier = Modifier.weight(1f))
                         SecondaryStats(
                             data = homeData,
                             formatter = formatter,
@@ -294,13 +304,14 @@ fun Forecast(data: WeatherApi.ForecastJsonData) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally) {
 
-        Spacer(modifier = Modifier.height(150.dp))
+        Spacer(modifier = Modifier.weight(1f))
         Text("5 Day forecast", color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.titleMedium)
+            style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(10.dp))
         for (j in 0..< icons.size) {
             ForecastItem(data, icons[j], j * 8, dayString[j])
         }
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
@@ -331,15 +342,75 @@ fun ForecastItem(data: WeatherApi.ForecastJsonData, icon: Int, it: Int, day: Str
 
 @Composable
 fun Settings() {
-    Text("Settings")
+    var checked1 by remember {
+        mutableStateOf(true)
+    }
+
+    var checked2 by remember {
+        mutableStateOf(true)
+    }
+
+    Column(modifier = Modifier
+        .background(MaterialTheme.colorScheme.surface)
+        .fillMaxSize(),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally) {
+
+        Spacer(modifier = Modifier.height(30.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Dark Mode", modifier = Modifier
+                .weight(0.5F)
+                .padding(start = 40.dp),
+                style = MaterialTheme.typography.bodyLarge)
+            Switch(checked = checked1, onCheckedChange = {checked1 = it},
+                modifier = Modifier
+                    .weight(0.5F)
+                    .padding(start = 40.dp),
+                colors = SwitchDefaults.colors(
+                    checkedTrackColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    checkedThumbColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant))
+        }
+        Spacer(modifier = Modifier.height(30.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Metric Units", modifier = Modifier
+                .weight(0.5F)
+                .padding(start = 40.dp),
+                style = MaterialTheme.typography.bodyLarge)
+            Switch(checked = checked2, onCheckedChange = {checked2 = it},
+                modifier = Modifier
+                    .weight(0.5F)
+                    .padding(start = 40.dp),
+                    colors = SwitchDefaults.colors(
+                        checkedTrackColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        checkedThumbColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant))
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = "Weatherly",
+            textAlign = TextAlign.End,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp))
+        Text(
+            text = "Data provided by OpenWeatherMap.org",
+            textAlign = TextAlign.End,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            style = MaterialTheme.typography.bodySmall)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(data: WeatherApi.HomeJsonData) {
+fun TopBar(data: WeatherApi.HomeJsonData, atSettings: Boolean) {
     CenterAlignedTopAppBar(
         title = {
-            Text(text = data.name + ", " + data.sys.country,
+            Text(text = if (atSettings) "Settings" else data.name + ", " + data.sys.country,
                 //modifier = Modifier.background(shimmerBrush(targetValue = 1300f, showShimmer = showShimmer)).alpha(showContent),
                 style = MaterialTheme.typography.titleLarge)
         },
@@ -351,7 +422,7 @@ fun TopBar(data: WeatherApi.HomeJsonData) {
 }
 
 @Composable
-fun BottomBar(navController: NavController) {
+fun BottomBar(navController: NavController, checkScreen: (Unit) -> Unit) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val items = listOf(Screen.Main, Screen.Forecast, Screen.Settings)
@@ -361,7 +432,8 @@ fun BottomBar(navController: NavController) {
     ) {
         items.forEach { screen ->
             NavigationBarItem(selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                onClick = { navController.navigate(screen.route) }, icon = { Icon(
+                onClick = { navController.navigate(screen.route)
+                    checkScreen(Unit)}, icon = { Icon(
                 imageVector = screen.icon,
                 contentDescription = "Home")})
         }
@@ -465,16 +537,16 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
                 .weight(0.5F)
                 .padding(5.dp)) {
             Row/*(modifier = Modifier.background(shimmerBrush(targetValue = 1300f, showShimmer = showShimmer)).alpha(showContent))*/ {
-                Text(text = "Real Feel:\nHumidity:\nPressure:",
+                Text(text = "Real Feel\nHumidity\nPressure",
                     modifier = Modifier.padding(10.dp),
-                    style = MaterialTheme.typography.bodyMedium)
+                    style = MaterialTheme.typography.bodyLarge)
                 Text(text = data.main.feelsLike.roundToInt().toString() + "°\n"
                         + data.main.humidity + "%\n"
                         + data.main.pressure + "hPa", modifier = Modifier
                     .padding(10.dp)
                     .weight(0.3F),
                     textAlign = TextAlign.End,
-                    style = MaterialTheme.typography.bodyMedium)
+                    style = MaterialTheme.typography.bodyLarge)
             }
         }
         Surface(shape = MaterialTheme.shapes.small,
@@ -485,16 +557,16 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
                 .weight(0.5F)
                 .padding(5.dp)) {
             Row/*(modifier = Modifier.background(shimmerBrush(targetValue = 1300f, showShimmer = showShimmer)).alpha(showContent))*/ {
-                Text(text = "Wind Speed:\nWind Dir:\nVisibility:",
+                Text(text = "Wind speed\nDirection\nVisibility",
                     modifier = Modifier.padding(10.dp),
-                    style = MaterialTheme.typography.bodyMedium)
+                    style = MaterialTheme.typography.bodyLarge)
                 Text(text = data.wind.speed.toString() + "m/s\n"
                         + data.wind.deg + "°\n"
                         + (data.visibility / 1000) + "km", modifier = Modifier
                     .padding(10.dp)
-                    .weight(0.3F),
+                    .weight(0.5F),
                     textAlign = TextAlign.End,
-                    style = MaterialTheme.typography.bodyMedium)
+                    style = MaterialTheme.typography.bodyLarge)
             }
         }
     }
@@ -504,12 +576,12 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
             color = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier
-                .weight(0.5F)
+                //.weight(0.5F)
                 .padding(5.dp)) {
             Row/*(modifier = Modifier.background(shimmerBrush(targetValue = 1300f, showShimmer = showShimmer)).alpha(showContent))*/ {
-                Text(text = "Sunrise:\nSunset:\nUpdated on:",
+                Text(text = "Sunrise\nSunset\nUpdated on",
                     modifier = Modifier.padding(10.dp),
-                    style = MaterialTheme.typography.bodyMedium)
+                    style = MaterialTheme.typography.bodyLarge)
                 Text(text = formatter.format(sunriseZone) + "\n"
                         + formatter.format(sunsetZone) + "\n"
                         + formatter.format(updatedOnTime),
@@ -517,10 +589,10 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
                         .padding(10.dp)
                         .weight(0.3F),
                     textAlign = TextAlign.End,
-                    style = MaterialTheme.typography.bodyMedium)
+                    style = MaterialTheme.typography.bodyLarge)
             }
         }
-        Surface(shape = MaterialTheme.shapes.small,
+        /*Surface(shape = MaterialTheme.shapes.small,
             shadowElevation = 2.dp,
             color = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -528,18 +600,18 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
                 .weight(0.5F)
                 .padding(5.dp)) {
             Row/*(modifier = Modifier.background(shimmerBrush(targetValue = 1300f, showShimmer = showShimmer)).alpha(showContent))*/ {
-                Text(text = "Sea level:\nGround level:\nCloudiness:",
+                Text(text = "Sea level\nGround level\nCloudiness",
                     modifier = Modifier.padding(10.dp),
-                    style = MaterialTheme.typography.bodyMedium)
+                    style = MaterialTheme.typography.bodyLarge)
                 Text(text = data.main.seaLevel.toString() + "hPa\n"
                         + data.main.grndLevel + "hPa\n"
                         + data.clouds.all + "%", modifier = Modifier
                     .padding(10.dp)
                     .weight(0.3F),
                     textAlign = TextAlign.End,
-                    style = MaterialTheme.typography.bodyMedium)
+                    style = MaterialTheme.typography.bodyLarge)
             }
-        }
+        }*/
     }
 }
 
