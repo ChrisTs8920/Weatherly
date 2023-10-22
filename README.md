@@ -41,3 +41,8 @@ Run from Android Studio.
 ### Forecast Screen
 
 ![Forecast](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/forecast.jpg?raw=True)
+
+### Settings Screen
+
+![Settings](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/settings.jpg?raw=True)
+
