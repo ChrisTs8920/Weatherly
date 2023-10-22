@@ -13,8 +13,8 @@ Icons provided by:
 ## Features
 
 - Current weather
-- Five day forecast (work in progress)
-- Settings / About screen (upcoming)
+- Five day forecast
+- Settings / About screen (work in progress)
 
 ## Requirements
 
