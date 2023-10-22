@@ -560,11 +560,11 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
                 Text(text = "Wind speed\nDirection\nVisibility",
                     modifier = Modifier.padding(10.dp),
                     style = MaterialTheme.typography.bodyLarge)
-                Text(text = data.wind.speed.toString() + "m/s\n"
+                Text(text = data.wind.speed.toInt().toString() + "m/s\n"
                         + data.wind.deg + "°\n"
                         + (data.visibility / 1000) + "km", modifier = Modifier
                     .padding(10.dp)
-                    .weight(0.5F),
+                    .weight(0.3F),
                     textAlign = TextAlign.End,
                     style = MaterialTheme.typography.bodyLarge)
             }

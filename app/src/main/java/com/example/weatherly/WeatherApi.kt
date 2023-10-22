@@ -184,7 +184,7 @@ object WeatherApi {
             weather = listOf(WeatherData(0, "", "", "01d")),
             main = MainData(0.0, 0.0, 0.0, 0.0, 0, 0),
             visibility = 0,
-            wind = WindData(10.0, 0),
+            wind = WindData(0.0, 0),
             dt = 0,
             sys = SysData(0, 0, "GR", 0, 0),
             timezone = 0,
