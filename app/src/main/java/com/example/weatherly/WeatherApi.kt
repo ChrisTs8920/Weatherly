@@ -117,10 +117,10 @@ object WeatherApi {
         @SerialName("dt_txt") val dtTxt: String
     )
 
-    private const val apiKey = "6fc16ee5f99c053a61862db4ee092d94"
+    private const val APIKEY = "6fc16ee5f99c053a61862db4ee092d94"
 
     suspend fun readMainData(city: String): HomeJsonData {
-        val strUrlWeather = "https://api.openweathermap.org/data/2.5/weather?q=$city&units=metric&appid=$apiKey"
+        val strUrlWeather = "https://api.openweathermap.org/data/2.5/weather?q=$city&units=metric&appid=$APIKEY"
         return withContext(Dispatchers.IO) {
             try {
                 val url = URL(strUrlWeather)
@@ -149,7 +149,7 @@ object WeatherApi {
     }
 
     suspend fun readForecastData(city: String): ForecastJsonData {
-        val strUrlForecast = "https://api.openweathermap.org/data/2.5/forecast?q=$city&units=metric&appid=$apiKey"
+        val strUrlForecast = "https://api.openweathermap.org/data/2.5/forecast?q=$city&units=metric&appid=$APIKEY"
         return withContext(Dispatchers.IO) {
             try {
                 val url = URL(strUrlForecast)

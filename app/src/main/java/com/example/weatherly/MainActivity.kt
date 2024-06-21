@@ -3,12 +3,12 @@ package com.example.weatherly
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,14 +17,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,29 +36,36 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -65,6 +74,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.weatherly.ui.theme.WeatherlyTheme
+import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -73,19 +83,20 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
 
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen() // Adds Splash Screen, Configure in res/values/splash.xml
         enableEdgeToEdge() // Adds color to status bar and navigation bar
         super.onCreate(savedInstanceState)
         setContent {
-            WeatherlyTheme {
+            val dataStore = DataStore(LocalContext.current)
+            val darkModeState by dataStore.darkModeFlow.collectAsState(initial = isSystemInDarkTheme())
+            WeatherlyTheme(useDarkTheme = darkModeState) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    App()
+                    App(dataStore, darkModeState)
                 }
             }
         }
@@ -94,7 +105,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun App() {
+fun App(dataStore: DataStore, darkModeState: Boolean) {
     var input by remember {
         mutableStateOf("Athens")
     }
@@ -157,17 +168,8 @@ fun App() {
     }
 
     val navController = rememberNavController()
-    //var showShimmer by remember {
-        //mutableStateOf(true)
-    //}
-
-    //var showContent by remember {
-        //mutableStateOf(0F)
-    //}
 
     LaunchedEffect(dataEffect) {
-        //showShimmer = true
-        //showContent = 0F
         prevData = homeData
         prevForecastData = forecastData
 
@@ -210,8 +212,6 @@ fun App() {
             "50d" -> currIcon = R.drawable._50d
             "50n" -> currIcon = R.drawable._50d
         }
-        //showShimmer = false
-        //showContent = 255F
     }
 
     Scaffold(
@@ -224,37 +224,49 @@ fun App() {
             }
         }
     ) {
-            innerPadding -> NavHost(navController, Screen.Main.route, Modifier.padding(innerPadding)) {
-                composable(Screen.Main.route) {
-                    Column(
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.surface)
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.Top,
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-
-                        Spacer(modifier = Modifier.height(30.dp))
-                        InputText(input = input, onValueChange = { input = it }) {
-                            dataEffect = !dataEffect
-                        }
-                        Spacer(modifier = Modifier.weight(1f))
-                        PrimaryStats(data = homeData, currIcon = currIcon)
-                        Spacer(modifier = Modifier.weight(1f))
-                        SecondaryStats(
-                            data = homeData,
-                            formatter = formatter,
-                            sunriseZone = sunriseZone,
-                            sunsetZone = sunsetZone,
-                            updatedOnTime = updatedOnTime
-                        )
+        innerPadding -> NavHost(navController, Screen.Main.route, Modifier.padding(innerPadding)) {
+            composable(Screen.Main.route) {
+                Column(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surface)
+                        .fillMaxSize()
+                        .paint(painterResource(id = R.drawable.cloud),
+                            alignment = BiasAlignment(-1.7f, -0.35f),
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)))
+                        .paint(painterResource(id = R.drawable.cloud),
+                            alignment = BiasAlignment(1.7f, 0.3f),
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)))
+                        .paint(painterResource(id = R.drawable.cloud),
+                            alignment = BiasAlignment(1.7f, -1f),
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)))
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    InputText(input = input, onValueChange = { input = it }) {
+                        dataEffect = !dataEffect
                     }
+                    Spacer(modifier = Modifier.height(40.dp))
+                    PrimaryStats(data = homeData,
+                        currIcon = currIcon,
+                        data2 = forecastData,
+                        formatter = formatter,
+                        sunriseZone = sunriseZone,
+                        sunsetZone = sunsetZone)
+                    Spacer(modifier = Modifier.height(120.dp))
+                    SecondaryStats(
+                        data = homeData,
+                        formatter = formatter,
+                        updatedOnTime = updatedOnTime)
                 }
-                composable(Screen.Forecast.route) {
-                    Forecast(forecastData)
-                }
-                composable(Screen.Settings.route) {
-                    Settings()
-                }
+            }
+            composable(Screen.Forecast.route) {
+                Forecast(forecastData)
+            }
+            composable(Screen.Settings.route) {
+                Settings(darkModeState, dataStore)
+            }
         }
     }
 }
@@ -300,7 +312,8 @@ fun Forecast(data: WeatherApi.ForecastJsonData) {
 
     Column(modifier = Modifier
         .background(MaterialTheme.colorScheme.surface)
-        .fillMaxSize(),
+        .fillMaxSize()
+        .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally) {
 
@@ -317,39 +330,55 @@ fun Forecast(data: WeatherApi.ForecastJsonData) {
 
 @Composable
 fun ForecastItem(data: WeatherApi.ForecastJsonData, icon: Int, it: Int, day: String) {
-    Surface(shape = MaterialTheme.shapes.small,
+    Surface(shape = MaterialTheme.shapes.large,
         shadowElevation = 2.dp,
-        color = if ((it / 8) % 2 == 0) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = if ((it / 8) % 2 == 0) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
-        //color = MaterialTheme.colorScheme.surfaceVariant,
-        //contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = if ((it / 8) % 2 == 0) MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp) else MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(5.dp)
-            .height(50.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(painter = painterResource(id = icon),
-                contentDescription = "Weather")
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(data.list[it].weather[0].main, modifier = Modifier.weight(0.4F))
-            Spacer(modifier = Modifier.width(40.dp))
-            Text(day, modifier = Modifier.weight(0.4F))
-            Spacer(modifier = Modifier.width(80.dp))
-            Text(data.list[it].main.temp.roundToInt().toString() + "°C", modifier = Modifier.weight(0.2F))
+            .height(140.dp)) {
+        Column(verticalArrangement = Arrangement.SpaceEvenly) {
+            Row(verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()) {
+                Image(painter = painterResource(id = icon),
+                    contentDescription = "Weather", modifier = Modifier.size(70.dp))
+                //Spacer(modifier = Modifier.width(20.dp))
+                Text(day, fontSize = MaterialTheme.typography.titleLarge.fontSize, color = MaterialTheme.colorScheme.onSurface)
+                Spacer(modifier = Modifier.width(20.dp))
+                Text(data.list[it].main.temp.roundToInt().toString() + "°C",
+                    fontSize = MaterialTheme.typography.titleLarge.fontSize, color = MaterialTheme.colorScheme.onSurface)
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()) {
+                Image(painterResource(id = R.drawable.thermometer), contentDescription = "real feel",
+                    modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(text = data.list[it].main.feelsLike.roundToInt().toString() + "°", color = MaterialTheme.colorScheme.onSurface)
+                Spacer(modifier = Modifier.width(20.dp))
+                Image(painterResource(id = R.drawable.humidity), contentDescription = "humidity",
+                    modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(text = data.list[it].main.humidity.toString() + "%", color = MaterialTheme.colorScheme.onSurface)
+                Spacer(modifier = Modifier.width(20.dp))
+                Image(painterResource(id = R.drawable.compass), contentDescription = "wind dir",
+                    modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(text = data.list[it].wind.deg.toString() + "°", color = MaterialTheme.colorScheme.onSurface)
+                Spacer(modifier = Modifier.width(20.dp))
+                Image(painterResource(id = R.drawable.speed), contentDescription = "wind speed",
+                    modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(text = data.list[it].wind.speed.toInt().toString() + "m/s", color = MaterialTheme.colorScheme.onSurface)
+            }
         }
     }
 }
 
 @Composable
-fun Settings() {
-    var checked1 by remember {
-        mutableStateOf(true)
-    }
-
-    var checked2 by remember {
-        mutableStateOf(true)
-    }
-
+fun Settings(checked: Boolean, dataStore: DataStore) {
     Column(modifier = Modifier
         .background(MaterialTheme.colorScheme.surface)
         .fillMaxSize(),
@@ -362,7 +391,7 @@ fun Settings() {
                 .weight(0.5F)
                 .padding(start = 40.dp),
                 style = MaterialTheme.typography.bodyLarge)
-            Switch(checked = checked1, onCheckedChange = {checked1 = it},
+            Switch(checked = checked, onCheckedChange = { runBlocking { dataStore.writeTheme(it) } },
                 modifier = Modifier
                     .weight(0.5F)
                     .padding(start = 40.dp),
@@ -373,12 +402,12 @@ fun Settings() {
                     uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant))
         }
         Spacer(modifier = Modifier.height(30.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        /*Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Metric Units", modifier = Modifier
                 .weight(0.5F)
                 .padding(start = 40.dp),
                 style = MaterialTheme.typography.bodyLarge)
-            Switch(checked = checked2, onCheckedChange = {checked2 = it},
+            Switch(checked = checked2, onCheckedChange = {onCheck2(it)},
                 modifier = Modifier
                     .weight(0.5F)
                     .padding(start = 40.dp),
@@ -387,21 +416,25 @@ fun Settings() {
                         checkedThumbColor = MaterialTheme.colorScheme.onTertiaryContainer,
                         uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
                         uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant))
-        }
+        }*/
         Spacer(modifier = Modifier.weight(1f))
         Text(
             text = "Weatherly",
-            textAlign = TextAlign.End,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp))
-        Text(
-            text = "Data provided by OpenWeatherMap.org",
-            textAlign = TextAlign.End,
+            textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(4.dp),
-            style = MaterialTheme.typography.bodySmall)
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface)
+        Text(
+            text = "Data provided by OpenWeatherMap.org",
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface)
     }
 }
 
@@ -410,8 +443,7 @@ fun Settings() {
 fun TopBar(data: WeatherApi.HomeJsonData, atSettings: Boolean) {
     CenterAlignedTopAppBar(
         title = {
-            Text(text = if (atSettings) "Settings" else data.name + ", " + data.sys.country,
-                //modifier = Modifier.background(shimmerBrush(targetValue = 1300f, showShimmer = showShimmer)).alpha(showContent),
+            Text(text = if (atSettings) "Settings" else data.name,
                 style = MaterialTheme.typography.titleLarge)
         },
         colors = TopAppBarDefaults.mediumTopAppBarColors(
@@ -438,33 +470,13 @@ fun BottomBar(navController: NavController, checkScreen: (Unit) -> Unit) {
                 contentDescription = "Home")})
         }
     }
-    /*BottomAppBar(
-        containerColor = Color.Transparent,
-        contentColor = MaterialTheme.colorScheme.onSurface
-    ) {
-        Column(modifier = Modifier.fillMaxHeight(0.9F)) {
-            Text(
-                text = "Weatherly",
-                textAlign = TextAlign.End,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(4.dp))
-            Text(
-                text = "Data provided by OpenWeatherMap.org",
-                textAlign = TextAlign.End,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(4.dp),
-                style = MaterialTheme.typography.bodySmall)
-        }
-    }*/
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputText(input: String, onValueChange: (String) -> Unit, onDone: (Unit) -> Unit) {
     val focusManager = LocalFocusManager.current
-    OutlinedTextField(
+    OutlinedTextField(shape = MaterialTheme.shapes.large,
         value = input,
         label = { Text(text = "Search a city..")},
         onValueChange = { onValueChange(it) },
@@ -489,178 +501,205 @@ fun InputText(input: String, onValueChange: (String) -> Unit, onDone: (Unit) -> 
 }
 
 @Composable
-fun PrimaryStats(data: WeatherApi.HomeJsonData, currIcon: Int) {
+fun PrimaryStats(data: WeatherApi.HomeJsonData,
+                 currIcon: Int,
+                 data2: WeatherApi.ForecastJsonData,
+                 formatter: DateTimeFormatter,
+                 sunriseZone: ZonedDateTime,
+                 sunsetZone: ZonedDateTime) {
+    val day = ZonedDateTime.ofInstant(Instant.ofEpochSecond(data2.list[0].dt.toLong()), ZoneOffset.UTC).dayOfWeek
+    val dayString = day.getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH)
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Image(painter = painterResource(id = currIcon),
+            contentDescription = "Weather",
+            modifier = Modifier.size(70.dp))
+        Spacer(modifier = Modifier.width(10.dp))
+        Column {
+            Text(text = "Today", fontSize = MaterialTheme.typography.displaySmall.fontSize)
+            Text(text = dayString, fontSize = MaterialTheme.typography.titleMedium.fontSize)
+        }
+    }
+    Spacer(modifier = Modifier.height(40.dp))
     Text(data.main.temp.roundToInt().toString() + "°C",
-        //modifier = Modifier.background(shimmerBrush(targetValue = 1300f, showShimmer = showShimmer)).alpha(showContent),
         style = TextStyle(
-            fontSize = MaterialTheme.typography.displayLarge.fontSize,
+            fontSize = 70.sp,
             brush = Brush.linearGradient(
                 colors = listOf(MaterialTheme.colorScheme.primary,
                     MaterialTheme.colorScheme.secondary,
                     MaterialTheme.colorScheme.tertiary))),
         color = MaterialTheme.colorScheme.primary)
     Spacer(modifier = Modifier.height(10.dp))
-    Row(verticalAlignment = Alignment.CenterVertically)/*modifier = Modifier.padding(5.dp).background(shimmerBrush(targetValue = 1300f, showShimmer = showShimmer)).alpha(showContent)*/ {
-        Image(painter = painterResource(id = currIcon),
-            contentDescription = "Weather")
-        Spacer(modifier = Modifier.width(10.dp))
+    Row {
         Text(text = data.weather[0].main, color = MaterialTheme.colorScheme.onSurface)
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(text = data.main.tempMin.roundToInt().toString() + "°",
+            color = MaterialTheme.colorScheme.onSurface)
+        Spacer(modifier = Modifier.width(5.dp))
+        Text("|", color = MaterialTheme.colorScheme.onSurface)
+        Spacer(modifier = Modifier.width(5.dp))
+        Text(text = data.main.tempMax.roundToInt().toString() + "°",
+            color = MaterialTheme.colorScheme.onSurface)
     }
     Spacer(modifier = Modifier.height(10.dp))
-    Row/*(modifier = Modifier.padding(5.dp).background(shimmerBrush(targetValue = 1300f, showShimmer = showShimmer)).alpha(showContent))*/ {
-        Icon(imageVector = Icons.Default.KeyboardArrowDown,
-            tint = MaterialTheme.colorScheme.tertiary,
-            contentDescription = "min")
-        Text(text = data.main.tempMin.roundToInt().toString() + "°C",
-            color = MaterialTheme.colorScheme.onSurface)
+    Row {
+        Text(text = "Sunrise " + formatter.format(sunriseZone), color = MaterialTheme.colorScheme.onSurface)
         Spacer(modifier = Modifier.width(10.dp))
-        Icon(imageVector = Icons.Default.KeyboardArrowUp,
-            tint = MaterialTheme.colorScheme.tertiary,
-            contentDescription = "max")
-        Text(text = data.main.tempMax.roundToInt().toString() + "°C",
-            color = MaterialTheme.colorScheme.onSurface)
+        Text(text = "•", fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(text = "Sunset " + formatter.format(sunsetZone), color = MaterialTheme.colorScheme.onSurface)
     }
 }
 
 @Composable
 fun SecondaryStats(data: WeatherApi.HomeJsonData,
                    formatter: DateTimeFormatter,
-                   sunriseZone: ZonedDateTime,
-                   sunsetZone: ZonedDateTime,
                    updatedOnTime: ZonedDateTime) {
     Row {
-        Surface(shape = MaterialTheme.shapes.small,
+        Surface(shape = MaterialTheme.shapes.large,
+            //border = BorderStroke(2.dp, MaterialTheme.colorScheme.surfaceColorAtElevation(24.dp)),
             shadowElevation = 2.dp,
-            color = MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+            color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+            contentColor = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
-                .weight(0.5F)
+                .weight(0.3F)
                 .padding(5.dp)) {
-            Row/*(modifier = Modifier.background(shimmerBrush(targetValue = 1300f, showShimmer = showShimmer)).alpha(showContent))*/ {
-                Text(text = "Real Feel\nHumidity\nPressure",
-                    modifier = Modifier.padding(10.dp),
-                    style = MaterialTheme.typography.bodyLarge)
-                Text(text = data.main.feelsLike.roundToInt().toString() + "°\n"
-                        + data.main.humidity + "%\n"
-                        + data.main.pressure + "hPa", modifier = Modifier
-                    .padding(10.dp)
-                    .weight(0.3F),
-                    textAlign = TextAlign.End,
-                    style = MaterialTheme.typography.bodyLarge)
+            Column(modifier = Modifier.padding(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                Image(painterResource(id = R.drawable.thermometer), contentDescription = "thermometer",
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(text = "Feels like " + data.main.feelsLike.roundToInt().toString() + "°", color = MaterialTheme.colorScheme.onSurface)
             }
         }
-        Surface(shape = MaterialTheme.shapes.small,
+        Surface(shape = MaterialTheme.shapes.large,
+            //border = BorderStroke(2.dp, MaterialTheme.colorScheme.surfaceColorAtElevation(24.dp)),
             shadowElevation = 2.dp,
-            color = MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+            color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+            contentColor = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
-                .weight(0.5F)
+                .weight(0.3F)
                 .padding(5.dp)) {
-            Row/*(modifier = Modifier.background(shimmerBrush(targetValue = 1300f, showShimmer = showShimmer)).alpha(showContent))*/ {
-                Text(text = "Wind speed\nDirection\nVisibility",
-                    modifier = Modifier.padding(10.dp),
-                    style = MaterialTheme.typography.bodyLarge)
-                Text(text = data.wind.speed.toInt().toString() + "m/s\n"
-                        + data.wind.deg + "°\n"
-                        + (data.visibility / 1000) + "km", modifier = Modifier
-                    .padding(10.dp)
-                    .weight(0.3F),
-                    textAlign = TextAlign.End,
-                    style = MaterialTheme.typography.bodyLarge)
+            Column(modifier = Modifier.padding(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                Image(painterResource(id = R.drawable.compass), contentDescription = "thermometer",
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(text = "Wind direction " + data.wind.deg + "°", color = MaterialTheme.colorScheme.onSurface)
             }
         }
     }
     Row {
-        Surface(shape = MaterialTheme.shapes.small,
+        Surface(shape = MaterialTheme.shapes.large,
             shadowElevation = 2.dp,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            //border = BorderStroke(2.dp, MaterialTheme.colorScheme.surfaceColorAtElevation(24.dp)),
+            color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+            contentColor = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
-                //.weight(0.5F)
+                .weight(0.3F)
                 .padding(5.dp)) {
-            Row/*(modifier = Modifier.background(shimmerBrush(targetValue = 1300f, showShimmer = showShimmer)).alpha(showContent))*/ {
-                Text(text = "Sunrise\nSunset\nUpdated on",
-                    modifier = Modifier.padding(10.dp),
-                    style = MaterialTheme.typography.bodyLarge)
-                Text(text = formatter.format(sunriseZone) + "\n"
-                        + formatter.format(sunsetZone) + "\n"
-                        + formatter.format(updatedOnTime),
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .weight(0.3F),
-                    textAlign = TextAlign.End,
-                    style = MaterialTheme.typography.bodyLarge)
+            Column(modifier = Modifier.padding(10.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(painterResource(id = R.drawable.humidity), contentDescription = "humidity",
+                        modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
+                    Text(text = "Humidity",
+                        modifier = Modifier.padding(10.dp),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface)
+                    Text(text = data.main.humidity.toString() + "%",
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .weight(0.3F),
+                        textAlign = TextAlign.End,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface)
+                }
+                Divider(thickness = 2.dp, modifier = Modifier.padding(5.dp), color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(painterResource(id = R.drawable.speed), contentDescription = "speed",
+                        modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
+                    Text(text = "Wind speed",
+                        modifier = Modifier.padding(10.dp),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface)
+                    Text(text = data.wind.speed.toInt().toString() + "m/s",
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .weight(0.3F),
+                        textAlign = TextAlign.End,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface)
+                }
+                Divider(thickness = 2.dp, modifier = Modifier.padding(5.dp), color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(painterResource(id = R.drawable.pressure), contentDescription = "pressure",
+                        modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
+                    Text(text = "Pressure",
+                        modifier = Modifier.padding(10.dp),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface)
+                    Text(text = data.main.pressure.toString() + "hPa",
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .weight(0.3F),
+                        textAlign = TextAlign.End,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface)
+                }
+                Divider(thickness = 2.dp, modifier = Modifier.padding(5.dp), color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(painterResource(id = R.drawable.visibility), contentDescription = "visibility",
+                        modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
+                    Text(text = "Visibility",
+                        modifier = Modifier.padding(10.dp),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface)
+                    Text(text = (data.visibility / 1000).toString() + "km",
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .weight(0.3F),
+                        textAlign = TextAlign.End,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface)
+                }
+                Divider(thickness = 2.dp, modifier = Modifier.padding(5.dp), color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(painterResource(id = R.drawable.updated), contentDescription = "updated on",
+                        modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
+                    Text(text = "Updated on",
+                        modifier = Modifier.padding(10.dp),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface)
+                    Text(text =  formatter.format(updatedOnTime),
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .weight(0.3F),
+                        textAlign = TextAlign.End,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface)
+                }
             }
+
         }
-        /*Surface(shape = MaterialTheme.shapes.small,
-            shadowElevation = 2.dp,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier
-                .weight(0.5F)
-                .padding(5.dp)) {
-            Row/*(modifier = Modifier.background(shimmerBrush(targetValue = 1300f, showShimmer = showShimmer)).alpha(showContent))*/ {
-                Text(text = "Sea level\nGround level\nCloudiness",
-                    modifier = Modifier.padding(10.dp),
-                    style = MaterialTheme.typography.bodyLarge)
-                Text(text = data.main.seaLevel.toString() + "hPa\n"
-                        + data.main.grndLevel + "hPa\n"
-                        + data.clouds.all + "%", modifier = Modifier
-                    .padding(10.dp)
-                    .weight(0.3F),
-                    textAlign = TextAlign.End,
-                    style = MaterialTheme.typography.bodyLarge)
-            }
-        }*/
     }
 }
-
-/*@Composable
-fun shimmerBrush(showShimmer: Boolean = true, targetValue:Float = 1000f): Brush {
-    return if (showShimmer) {
-        val shimmerColors = listOf(
-            Color.LightGray.copy(alpha = 0.6f),
-            Color.LightGray.copy(alpha = 0.2f),
-            Color.LightGray.copy(alpha = 0.6f),
-        )
-
-        val transition = rememberInfiniteTransition(label = "")
-        val translateAnimation = transition.animateFloat(
-            initialValue = 0f,
-            targetValue = targetValue,
-            animationSpec = infiniteRepeatable(
-                animation = tween(800), repeatMode = RepeatMode.Reverse
-            ), label = ""
-        )
-        Brush.linearGradient(
-            colors = shimmerColors,
-            start = Offset.Zero,
-            end = Offset(x = translateAnimation.value, y = translateAnimation.value)
-        )
-    } else {
-        Brush.linearGradient(
-            colors = listOf(Color.Transparent,Color.Transparent),
-            start = Offset.Zero,
-            end = Offset.Zero
-        )
-    }
-}*/
 
 @Preview(showBackground = true, name = "Dark theme", uiMode = UI_MODE_NIGHT_YES)
 @Preview(showBackground = true, name = "Light theme", uiMode = UI_MODE_NIGHT_NO)
 @Composable
 fun AppPreview() {
+    val dataStore = DataStore(LocalContext.current)
     WeatherlyTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            App()
+            App(dataStore, true)
         }
     }
 }
 
-@Preview
+@Preview(showBackground = true, name = "Dark theme", uiMode = UI_MODE_NIGHT_YES)
 @Composable
 fun ForecastItemPreview() {
     WeatherlyTheme {

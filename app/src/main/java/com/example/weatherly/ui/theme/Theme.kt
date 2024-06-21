@@ -77,10 +77,10 @@ fun WeatherlyTheme(
   useDarkTheme: Boolean = isSystemInDarkTheme(),
   content: @Composable() () -> Unit
 ) {
-  val colors = if (!useDarkTheme) {
-    LightColors
-  } else {
+  val colors = if (useDarkTheme) {
     DarkColors
+  } else {
+    LightColors
   }
 
   MaterialTheme(

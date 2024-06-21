@@ -1,4 +1,4 @@
-# Weatherly - A Weather app for Android (WORK IN PROGRESS)
+# Weatherly - A Weather app for Android
 
 ## Description
 
@@ -14,7 +14,7 @@ Icons provided by:
 
 - Current weather
 - Five day forecast
-- Settings / About screen (work in progress)
+- Settings screen
 
 ## Requirements
 
@@ -30,19 +30,16 @@ Run from Android Studio.
 
 ## Screenshots
 
-### Splash Screen
+### Dark mode
 
-![Splash](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/splash.jpg?raw=True)
+| ![Splash](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main_dark.jpg?raw=True) | ![Main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main2_dark.jpg?raw=True) |
+------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| ![Splash](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/forecast_dark.jpg?raw=True) | ![Main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/settings_dark.jpg?raw=True) |
 
-### Main Screen
 
-![Main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main.jpg?raw=True)
+### Light mode
 
-### Forecast Screen
 
-![Forecast](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/forecast.jpg?raw=True)
-
-### Settings Screen
-
-![Settings](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/settings.jpg?raw=True)
-
+| ![Splash](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main_light.jpg?raw=True) | ![Main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main2_light.jpg?raw=True) |
+------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| ![Splash](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/forecast_light.jpg?raw=True) | ![Main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/settings_light.jpg?raw=True) |
