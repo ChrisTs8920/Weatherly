@@ -16,6 +16,10 @@ Icons provided by:
 - Five day forecast
 - Settings screen
 
+## To do
+
+- Code improvements
+
 ## Requirements
 
 - Android Nougat 8.0+ (Tested using Android 10)
@@ -32,14 +36,14 @@ Run from Android Studio.
 
 ### Dark mode
 
-| ![Splash](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main_dark.jpg?raw=True) | ![Main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main2_dark.jpg?raw=True) |
+| ![main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main_dark.jpg?raw=True) | ![main2](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main2_dark.jpg?raw=True) |
 ------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
-| ![Splash](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/forecast_dark.jpg?raw=True) | ![Main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/settings_dark.jpg?raw=True) |
+| ![forecast](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/forecast_dark.jpg?raw=True) | ![settings](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/settings_dark.jpg?raw=True) |
 
 
 ### Light mode
 
 
-| ![Splash](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main_light.jpg?raw=True) | ![Main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main2_light.jpg?raw=True) |
+| ![main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main_light.jpg?raw=True) | ![main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main2_light.jpg?raw=True) |
 ------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
-| ![Splash](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/forecast_light.jpg?raw=True) | ![Main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/settings_light.jpg?raw=True) |
+| ![forecast](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/forecast_light.jpg?raw=True) | ![settings](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/settings_light.jpg?raw=True) |
