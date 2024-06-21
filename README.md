@@ -16,7 +16,7 @@ Theme builder used:
 
 ## Features
 
-- Show current weather:
+- Current weather
     - Real feel
     - Wind direction and speed
     - Pressure
@@ -27,6 +27,7 @@ Theme builder used:
 ## To do
 
 - Code improvements
+- Fix an issue where light theme does not apply correctly on some devices
 
 ## Requirements
 
@@ -45,13 +46,11 @@ Run from Android Studio.
 ### Dark mode
 
 | ![main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main_dark.jpg?raw=True) | ![main2](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main2_dark.jpg?raw=True) |
-------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
 | ![forecast](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/forecast_dark.jpg?raw=True) | ![settings](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/settings_dark.jpg?raw=True) |
-
 
 ### Light mode
 
-
 | ![main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main_light.jpg?raw=True) | ![main](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/main2_light.jpg?raw=True) |
-------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+|-------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
 | ![forecast](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/forecast_light.jpg?raw=True) | ![settings](https://github.com/ChrisTs8920/Weatherly/blob/main/screenshots/settings_light.jpg?raw=True) |
