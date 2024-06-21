@@ -10,9 +10,17 @@ Icons provided by:
 [Google Material Icons](https://fonts.google.com/icons)  
 [OpenWeatherMap.org](https://openweathermap.org/weather-conditions)
 
+Theme builder used:
+
+[Google Material Design](https://material-foundation.github.io/material-theme-builder/)
+
 ## Features
 
-- Current weather
+- Show current weather:
+    - Real feel
+    - Wind direction and speed
+    - Pressure
+    - Visibility
 - Five day forecast
 - Settings screen
 
