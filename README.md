@@ -3,7 +3,7 @@
 ## Description
 
 Weatherly is a Weather app developed using Kotlin and Jetpack Compose.  
-API used: [OpenWeatherMap.org](https://openweathermap.org/)
+API used: [OpenWeatherMap.org](https://openweathermap.org/).
 
 Icons provided by:
 
@@ -16,13 +16,14 @@ Theme builder used:
 
 ## Features
 
-- Current weather
+- **Current weather screen**, which includes:
     - Real feel
+    - Humidity
     - Wind direction and speed
     - Pressure
     - Visibility
-- Five day forecast
-- Settings screen
+- **Five day forecast screen**
+- **Settings screen**
 
 ## To do
 
