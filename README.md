@@ -27,8 +27,9 @@ Theme builder used:
 
 ## To do
 
-- Code improvements
+- Add pull to refresh
 - Fix an issue where light theme does not apply correctly on some devices
+- Code improvements and refactoring
 
 ## Requirements
 
