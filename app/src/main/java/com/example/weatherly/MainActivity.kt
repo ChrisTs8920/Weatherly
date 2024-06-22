@@ -26,19 +26,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -103,7 +103,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App(dataStore: DataStore, darkModeState: Boolean) {
     var input by remember {
@@ -230,15 +229,33 @@ fun App(dataStore: DataStore, darkModeState: Boolean) {
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.surface)
                         .fillMaxSize()
-                        .paint(painterResource(id = R.drawable.cloud),
+                        .paint(
+                            painterResource(id = R.drawable.cloud),
                             alignment = BiasAlignment(-1.7f, -0.35f),
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)))
-                        .paint(painterResource(id = R.drawable.cloud),
+                            colorFilter = ColorFilter.tint(
+                                MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                    4.dp
+                                )
+                            )
+                        )
+                        .paint(
+                            painterResource(id = R.drawable.cloud),
                             alignment = BiasAlignment(1.7f, 0.3f),
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)))
-                        .paint(painterResource(id = R.drawable.cloud),
+                            colorFilter = ColorFilter.tint(
+                                MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                    4.dp
+                                )
+                            )
+                        )
+                        .paint(
+                            painterResource(id = R.drawable.cloud),
                             alignment = BiasAlignment(1.7f, -1f),
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)))
+                            colorFilter = ColorFilter.tint(
+                                MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                    4.dp
+                                )
+                            )
+                        )
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.SpaceEvenly,
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -322,17 +339,17 @@ fun Forecast(data: WeatherApi.ForecastJsonData) {
             style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(10.dp))
         for (j in 0..< icons.size) {
-            ForecastItem(data, icons[j], j * 8, dayString[j])
+            ForecastItem(data, icons[j], j * 8, dayString[j], j)
         }
         Spacer(modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
-fun ForecastItem(data: WeatherApi.ForecastJsonData, icon: Int, it: Int, day: String) {
+fun ForecastItem(data: WeatherApi.ForecastJsonData, icon: Int, it: Int, day: String, j: Int) {
     Surface(shape = MaterialTheme.shapes.large,
         shadowElevation = 2.dp,
-        color = if ((it / 8) % 2 == 0) MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp) else MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+        color = MaterialTheme.colorScheme.surfaceColorAtElevation((j + 1).dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(5.dp)
@@ -343,7 +360,6 @@ fun ForecastItem(data: WeatherApi.ForecastJsonData, icon: Int, it: Int, day: Str
                 modifier = Modifier.fillMaxWidth()) {
                 Image(painter = painterResource(id = icon),
                     contentDescription = "Weather", modifier = Modifier.size(70.dp))
-                //Spacer(modifier = Modifier.width(20.dp))
                 Text(day, fontSize = MaterialTheme.typography.titleLarge.fontSize, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.width(20.dp))
                 Text(data.list[it].main.temp.roundToInt().toString() + "°C",
@@ -472,7 +488,6 @@ fun BottomBar(navController: NavController, checkScreen: (Unit) -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputText(input: String, onValueChange: (String) -> Unit, onDone: (Unit) -> Unit) {
     val focusManager = LocalFocusManager.current
@@ -487,9 +502,10 @@ fun InputText(input: String, onValueChange: (String) -> Unit, onDone: (Unit) -> 
             focusManager.clearFocus()
         }),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            textColor = MaterialTheme.colorScheme.tertiary,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            focusedTextColor =  MaterialTheme.colorScheme.tertiary,
+            unfocusedTextColor = MaterialTheme.colorScheme.tertiary,
             unfocusedBorderColor = MaterialTheme.colorScheme.tertiary,
             focusedBorderColor = MaterialTheme.colorScheme.tertiary,
             unfocusedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -557,9 +573,8 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
                    updatedOnTime: ZonedDateTime) {
     Row {
         Surface(shape = MaterialTheme.shapes.large,
-            //border = BorderStroke(2.dp, MaterialTheme.colorScheme.surfaceColorAtElevation(24.dp)),
             shadowElevation = 2.dp,
-            color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+            color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
             contentColor = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
                 .weight(0.3F)
@@ -573,9 +588,8 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
             }
         }
         Surface(shape = MaterialTheme.shapes.large,
-            //border = BorderStroke(2.dp, MaterialTheme.colorScheme.surfaceColorAtElevation(24.dp)),
             shadowElevation = 2.dp,
-            color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+            color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
             contentColor = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
                 .weight(0.3F)
@@ -592,8 +606,7 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
     Row {
         Surface(shape = MaterialTheme.shapes.large,
             shadowElevation = 2.dp,
-            //border = BorderStroke(2.dp, MaterialTheme.colorScheme.surfaceColorAtElevation(24.dp)),
-            color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+            color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
             contentColor = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
                 .weight(0.3F)
@@ -614,7 +627,11 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface)
                 }
-                Divider(thickness = 2.dp, modifier = Modifier.padding(5.dp), color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))
+                HorizontalDivider(
+                    modifier = Modifier.padding(5.dp),
+                    thickness = 2.dp,
+                    color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(painterResource(id = R.drawable.speed), contentDescription = "speed",
                         modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
@@ -630,7 +647,11 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface)
                 }
-                Divider(thickness = 2.dp, modifier = Modifier.padding(5.dp), color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))
+                HorizontalDivider(
+                    modifier = Modifier.padding(5.dp),
+                    thickness = 2.dp,
+                    color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(painterResource(id = R.drawable.pressure), contentDescription = "pressure",
                         modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
@@ -646,7 +667,11 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface)
                 }
-                Divider(thickness = 2.dp, modifier = Modifier.padding(5.dp), color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))
+                HorizontalDivider(
+                    modifier = Modifier.padding(5.dp),
+                    thickness = 2.dp,
+                    color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(painterResource(id = R.drawable.visibility), contentDescription = "visibility",
                         modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
@@ -662,7 +687,11 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface)
                 }
-                Divider(thickness = 2.dp, modifier = Modifier.padding(5.dp), color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))
+                HorizontalDivider(
+                    modifier = Modifier.padding(5.dp),
+                    thickness = 2.dp,
+                    color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(painterResource(id = R.drawable.updated), contentDescription = "updated on",
                         modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
@@ -701,15 +730,12 @@ fun AppPreview() {
 
 @Preview(showBackground = true, name = "Dark theme", uiMode = UI_MODE_NIGHT_YES)
 @Composable
-fun ForecastItemPreview() {
+fun ForecastPreview() {
     WeatherlyTheme {
         Surface(
             color = MaterialTheme.colorScheme.background
         ) {
-            ForecastItem(data = WeatherApi.forecastDummyData(),
-                icon = R.drawable._01d,
-                it = 0,
-                "Friday")
+            Forecast(data = WeatherApi.forecastDummyData())
         }
     }
 }
