@@ -186,10 +186,10 @@ object WeatherApi {
             visibility = 0,
             wind = WindData(0.0, 0),
             dt = 0,
-            sys = SysData(0, 0, "GR", 0, 0),
+            sys = SysData(0, 0, "", 0, 0),
             timezone = 0,
             id = 0,
-            name = "City",
+            name = "",
             cod = 0,
             clouds = CloudsData(0)
         )
