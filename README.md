@@ -27,7 +27,7 @@ Theme builder used:
 
 ## To do
 
-- Add pull to refresh
+- Pull to refresh (currently non-functional)
 - Fix an issue where light theme does not apply correctly on some devices
 - Code improvements and refactoring
 
