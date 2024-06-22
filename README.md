@@ -23,7 +23,9 @@ Theme builder used:
     - Pressure
     - Visibility
 - **Five day forecast screen**
+    - Next five days forecast for selected city
 - **Settings screen**
+    - Dark - light mode selection
 
 ## To do
 
