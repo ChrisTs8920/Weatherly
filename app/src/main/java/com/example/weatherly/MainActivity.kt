@@ -91,12 +91,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             val dataStore = DataStore(LocalContext.current)
             val darkModeState by dataStore.darkModeFlow.collectAsState(initial = isSystemInDarkTheme())
+            val cityState by dataStore.cityFlow.collectAsState(initial = "")
             WeatherlyTheme(useDarkTheme = darkModeState) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    App(dataStore, darkModeState)
+                    App(dataStore, darkModeState, cityState)
                 }
             }
         }
@@ -104,9 +105,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun App(dataStore: DataStore, darkModeState: Boolean) {
+fun App(dataStore: DataStore, darkModeState: Boolean, citySate: String) {
     var input by remember {
-        mutableStateOf("Athens")
+        mutableStateOf(citySate)
     }
 
     var prevInput by remember {
@@ -158,29 +159,25 @@ fun App(dataStore: DataStore, darkModeState: Boolean) {
         mutableIntStateOf(R.drawable._01d)
     }
 
-    var dataEffect by remember {
-        mutableStateOf(false)
-    }
-
     var atSettings by remember {
         mutableStateOf(false)
     }
 
     val navController = rememberNavController()
 
-    LaunchedEffect(dataEffect) {
+    LaunchedEffect(citySate) {
         prevData = homeData
         prevForecastData = forecastData
 
-        homeData = WeatherApi.readMainData(input)
-        forecastData = WeatherApi.readForecastData(input)
+        homeData = WeatherApi.readMainData(citySate)
+        forecastData = WeatherApi.readForecastData(citySate)
 
         if (homeData == WeatherApi.dummyData()) { // In case of readData failure(i.e provided City does not exist), keep previous data
             homeData = prevData
             forecastData = prevForecastData
-            input = prevInput
+            dataStore.writeCity(prevInput)
         } else {
-            prevInput = input
+            prevInput = citySate
         }
 
         // Update time Zones
@@ -262,7 +259,9 @@ fun App(dataStore: DataStore, darkModeState: Boolean) {
                 ) {
                     Spacer(modifier = Modifier.height(20.dp))
                     InputText(input = input, onValueChange = { input = it }) {
-                        dataEffect = !dataEffect
+                        runBlocking {
+                            dataStore.writeCity(input)
+                        }
                     }
                     Spacer(modifier = Modifier.height(40.dp))
                     PrimaryStats(data = homeData,
@@ -537,14 +536,24 @@ fun PrimaryStats(data: WeatherApi.HomeJsonData,
         }
     }
     Spacer(modifier = Modifier.height(40.dp))
-    Text(data.main.temp.roundToInt().toString() + "°C",
-        style = TextStyle(
-            fontSize = 70.sp,
+    Row {
+        Spacer(modifier = Modifier.width(30.dp))
+        Text(data.main.temp.roundToInt().toString(),
+            style = TextStyle(
+                fontSize = 70.sp,
+                brush = Brush.linearGradient(
+                    colors = listOf(MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.secondary,
+                        MaterialTheme.colorScheme.tertiary))),
+            color = MaterialTheme.colorScheme.primary)
+        Text("°C", style = TextStyle(
+            fontSize = 30.sp,
             brush = Brush.linearGradient(
                 colors = listOf(MaterialTheme.colorScheme.primary,
                     MaterialTheme.colorScheme.secondary,
                     MaterialTheme.colorScheme.tertiary))),
-        color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.primary)
+    }
     Spacer(modifier = Modifier.height(10.dp))
     Row {
         Text(text = data.weather[0].main, color = MaterialTheme.colorScheme.onSurface)
@@ -723,7 +732,7 @@ fun AppPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            App(dataStore, true)
+            App(dataStore, true, "Athens")
         }
     }
 }
