@@ -120,13 +120,17 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun App(dataStore: DataStore, darkModeState: Boolean, citySate: String) {
-    var input by remember {
+fun App(dataStore: DataStore, darkModeState: Boolean, cityState: String) {
+    var textFieldInput by remember {
         mutableStateOf("")
     }
 
-    var prevInput by remember {
-        mutableStateOf(input)
+    //var prevTextFieldInput by remember {
+        //mutableStateOf(textFieldInput)
+    //}
+
+    var textFieldEffect by remember {
+        mutableStateOf(true)
     }
 
     var homeData by remember {
@@ -189,19 +193,25 @@ fun App(dataStore: DataStore, darkModeState: Boolean, citySate: String) {
     }
     val state = rememberPullRefreshState(refreshing, ::refresh)
 
-    LaunchedEffect(citySate) {
+    LaunchedEffect(textFieldEffect, cityState) {
         prevData = homeData
         prevForecastData = forecastData
+        //prevTextFieldInput = textFieldInput
 
-        homeData = WeatherApi.readMainData(citySate)
-        forecastData = WeatherApi.readForecastData(citySate)
+        homeData = WeatherApi.readMainData(cityState)
+        forecastData = WeatherApi.readForecastData(cityState)
 
         if (homeData == WeatherApi.dummyData()) { // In case of readData failure(i.e provided City does not exist), keep previous data
             homeData = prevData
             forecastData = prevForecastData
-            dataStore.writeCity(prevInput)
+            textFieldInput = ""
+            //dataStore.writeCity(prevTextFieldInput)
+            //textFieldInput = prevTextFieldInput
         } else {
-            prevInput = citySate
+            //prevTextFieldInput = textFieldInput
+            if (textFieldInput != "")
+                dataStore.writeCity(textFieldInput)
+            textFieldInput = ""
         }
 
         // Update time Zones
@@ -291,10 +301,10 @@ fun App(dataStore: DataStore, darkModeState: Boolean, citySate: String) {
                                 backgroundColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary)
                             Spacer(modifier = Modifier.height(20.dp))
-                            InputText(input = input, onValueChange = { input = it }) {
+                            InputText(input = textFieldInput, onValueChange = { textFieldInput = it }) {
+                                textFieldEffect = !textFieldEffect
                                 runBlocking {
-                                    dataStore.writeCity(input)
-                                    input = ""
+                                    dataStore.writeCity(textFieldInput)
                                 }
                             }
                             Spacer(modifier = Modifier.height(40.dp))
