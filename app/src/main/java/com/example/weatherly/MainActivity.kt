@@ -91,7 +91,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val dataStore = DataStore(LocalContext.current)
             val darkModeState by dataStore.darkModeFlow.collectAsState(initial = isSystemInDarkTheme())
-            val cityState by dataStore.cityFlow.collectAsState(initial = "")
+            val cityState by dataStore.cityFlow.collectAsState(initial = "Athens")
             WeatherlyTheme(useDarkTheme = darkModeState) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
