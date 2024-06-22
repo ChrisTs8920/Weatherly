@@ -125,14 +125,6 @@ fun App(dataStore: DataStore, darkModeState: Boolean, cityState: String) {
         mutableStateOf("")
     }
 
-    //var prevTextFieldInput by remember {
-        //mutableStateOf(textFieldInput)
-    //}
-
-    var textFieldEffect by remember {
-        mutableStateOf(true)
-    }
-
     var homeData by remember {
         mutableStateOf(WeatherApi.dummyData())
     }
@@ -193,26 +185,20 @@ fun App(dataStore: DataStore, darkModeState: Boolean, cityState: String) {
     }
     val state = rememberPullRefreshState(refreshing, ::refresh)
 
-    LaunchedEffect(textFieldEffect, cityState) {
+    // Enters on App start AND every time the user inputs a new city
+    LaunchedEffect(cityState) {
         prevData = homeData
         prevForecastData = forecastData
-        //prevTextFieldInput = textFieldInput
 
         homeData = WeatherApi.readMainData(cityState)
         forecastData = WeatherApi.readForecastData(cityState)
 
-        if (homeData == WeatherApi.dummyData()) { // In case of readData failure(i.e provided City does not exist), keep previous data
+        if (homeData == WeatherApi.dummyData()) { // In case of readData failure (i.e provided City does not exist), keep previous data
             homeData = prevData
             forecastData = prevForecastData
-            textFieldInput = ""
-            //dataStore.writeCity(prevTextFieldInput)
-            //textFieldInput = prevTextFieldInput
-        } else {
-            //prevTextFieldInput = textFieldInput
-            if (textFieldInput != "")
-                dataStore.writeCity(textFieldInput)
-            textFieldInput = ""
         }
+        if (homeData.name != "")
+            dataStore.writeCity(homeData.name)
 
         // Update time Zones
         updatedOnTime = Instant.ofEpochSecond(homeData.dt.toLong()).atZone(ZoneId.systemDefault())
@@ -297,15 +283,18 @@ fun App(dataStore: DataStore, darkModeState: Boolean, cityState: String) {
                     ) {
                         if (targetState) {
                             PullRefreshIndicator(refreshing = refreshing, state = state,
-                                Modifier.align(Alignment.CenterHorizontally).zIndex(1f),
+                                Modifier
+                                    .align(Alignment.CenterHorizontally)
+                                    .zIndex(1f),
                                 backgroundColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary)
                             Spacer(modifier = Modifier.height(20.dp))
                             InputText(input = textFieldInput, onValueChange = { textFieldInput = it }) {
-                                textFieldEffect = !textFieldEffect
                                 runBlocking {
                                     dataStore.writeCity(textFieldInput)
                                 }
+                                //textFieldEffect = !textFieldEffect
+                                textFieldInput = ""
                             }
                             Spacer(modifier = Modifier.height(40.dp))
                             PrimaryStats(data = homeData,
@@ -394,13 +383,16 @@ fun Forecast(data: WeatherApi.ForecastJsonData, state: PullRefreshState, refresh
 
     Column(modifier = Modifier
         .background(MaterialTheme.colorScheme.surface)
-        .fillMaxSize().pullRefresh(state)
+        .fillMaxSize()
+        .pullRefresh(state)
         .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally) {
 
         PullRefreshIndicator(refreshing = refreshing, state = state,
-            Modifier.align(Alignment.CenterHorizontally).zIndex(1f),
+            Modifier
+                .align(Alignment.CenterHorizontally)
+                .zIndex(1f),
             backgroundColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary)
         Spacer(modifier = Modifier.weight(1f))
