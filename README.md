@@ -12,11 +12,13 @@ Icons provided by:
 
 Theme builder used:
 
-[Google Material Design](https://material-foundation.github.io/material-theme-builder/)
+[Google Material theme builder](https://material-foundation.github.io/material-theme-builder/)
 
 ## Features
 
-- **Current weather screen**, which includes:
+### Three screens
+
+- **Current weather screen**
     - Real feel
     - Humidity
     - Wind direction and speed
@@ -27,23 +29,23 @@ Theme builder used:
 - **Settings screen**
     - Dark - light mode selection
 
+### Other
+
+- Pull to refresh
+- Weatherly saves the last city the user selected
+
 ## To do
 
-- Pull to refresh (currently non-functional)
 - Fix an issue where light theme does not apply correctly on some devices
 - Code improvements and refactoring
 
 ## Requirements
 
-- Android Nougat 8.0+ (Tested using Android 10)
+Android Nougat 8.0+ (Tested using Android 10)
 
 ## How to run
 
-Install the apk provided in the apk directory.
-
-OR
-
-Run from Android Studio.
+Install the apk provided in the apk directory, or run from Android Studio.
 
 ## Screenshots
 

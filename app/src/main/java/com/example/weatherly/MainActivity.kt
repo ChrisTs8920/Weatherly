@@ -121,6 +121,10 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun App(dataStore: DataStore, darkModeState: Boolean, cityState: String) {
+    var refreshEffect by remember {
+        mutableStateOf(true)
+    }
+
     var textFieldInput by remember {
         mutableStateOf("")
     }
@@ -181,12 +185,13 @@ fun App(dataStore: DataStore, darkModeState: Boolean, cityState: String) {
     fun refresh() = refreshScope.launch {
         refreshing = true
         delay(1000)
+        refreshEffect = !refreshEffect
         refreshing = false
     }
     val state = rememberPullRefreshState(refreshing, ::refresh)
 
     // Enters on App start AND every time the user inputs a new city
-    LaunchedEffect(cityState) {
+    LaunchedEffect(cityState, refreshEffect) {
         prevData = homeData
         prevForecastData = forecastData
 
@@ -293,7 +298,6 @@ fun App(dataStore: DataStore, darkModeState: Boolean, cityState: String) {
                                 runBlocking {
                                     dataStore.writeCity(textFieldInput)
                                 }
-                                //textFieldEffect = !textFieldEffect
                                 textFieldInput = ""
                             }
                             Spacer(modifier = Modifier.height(40.dp))
