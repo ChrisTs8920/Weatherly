@@ -36,6 +36,7 @@ Theme builder used:
 
 ## To do
 
+- Add air pollution data
 - Fix an issue where light theme does not apply correctly on some devices
 - Code improvements and refactoring
 
