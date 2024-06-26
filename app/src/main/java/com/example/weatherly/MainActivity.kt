@@ -293,7 +293,6 @@ fun App(dataStore: DataStore, darkModeState: Boolean, cityState: String) {
                                     .zIndex(1f),
                                 backgroundColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary)
-                            Spacer(modifier = Modifier.height(20.dp))
                             InputText(input = textFieldInput, onValueChange = { textFieldInput = it }) {
                                 runBlocking {
                                     dataStore.writeCity(textFieldInput)
@@ -399,14 +398,14 @@ fun Forecast(data: WeatherApi.ForecastJsonData, state: PullRefreshState, refresh
                 .zIndex(1f),
             backgroundColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary)
-        Spacer(modifier = Modifier.weight(1f))
+        //Spacer(modifier = Modifier.weight(1f))
         Text("5 Day forecast", color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(10.dp))
         for (j in 0..< icons.size) {
             ForecastItem(data, icons[j], j * 8, dayString[j], j)
         }
-        Spacer(modifier = Modifier.weight(1f))
+        //Spacer(modifier = Modifier.weight(1f))
     }
 }
 
@@ -414,17 +413,19 @@ fun Forecast(data: WeatherApi.ForecastJsonData, state: PullRefreshState, refresh
 fun ForecastItem(data: WeatherApi.ForecastJsonData, icon: Int, it: Int, day: String, j: Int) {
     Surface(shape = MaterialTheme.shapes.large,
         shadowElevation = 2.dp,
-        color = MaterialTheme.colorScheme.surfaceColorAtElevation((j + 1).dp),
+        color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+        //color = MaterialTheme.colorScheme.surfaceColorAtElevation((j + 1).dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(5.dp)
             .height(140.dp)) {
-        Column(verticalArrangement = Arrangement.SpaceEvenly) {
+        Column(verticalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.padding(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()) {
                 Image(painter = painterResource(id = icon),
                     contentDescription = "Weather", modifier = Modifier.size(70.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Text(day, fontSize = MaterialTheme.typography.titleLarge.fontSize, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.width(20.dp))
                 Text(data.list[it].main.temp.roundToInt().toString() + "°C",
@@ -788,15 +789,16 @@ fun AppPreview() {
     }
 }
 
-//@OptIn(ExperimentalMaterialApi::class)
-//@Preview(showBackground = true, name = "Dark theme", uiMode = UI_MODE_NIGHT_YES)
-//@Composable
-//fun ForecastPreview() {
-//    WeatherlyTheme {
-//        Surface(
-//            color = MaterialTheme.colorScheme.background
-//        ) {
-//            Forecast(data = WeatherApi.forecastDummyData())
-//        }
-//    }
-//}
+@OptIn(ExperimentalMaterialApi::class)
+@Preview(showBackground = true, name = "Dark theme", uiMode = UI_MODE_NIGHT_YES)
+@Composable
+fun ForecastPreview() {
+    val state = rememberPullRefreshState(false, onRefresh = { })
+    WeatherlyTheme {
+        Surface(
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Forecast(data = WeatherApi.forecastDummyData(), state, false)
+        }
+    }
+}
