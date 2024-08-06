@@ -14,9 +14,10 @@ import java.net.URL
 
 object WeatherApi {
 
+    // Data for Main screen
     @Serializable
     data class HomeJsonData(
-        @SerialName("coord") @Transient val coord: String = "",
+        @SerialName("coord") val coord: Coords,
         @SerialName("weather") val weather: List<WeatherData>,
         @SerialName("base") val base: String,
         @SerialName("main") val main: MainData,
@@ -31,6 +32,12 @@ object WeatherApi {
         @SerialName("id") val id: Int,
         @SerialName("name") val name: String,
         @SerialName("cod") val cod: Int,
+    )
+
+    @Serializable
+    data class Coords(
+        @SerialName("lon") val lon: Double,
+        @SerialName("lat") val lat: Double
     )
 
     @Serializable
@@ -81,7 +88,7 @@ object WeatherApi {
     )
 
 
-
+    // Data for Forecast Screen
     @Serializable
     data class ForecastJsonData(
         @SerialName("cod") @Transient val cod: String = "",
@@ -117,7 +124,40 @@ object WeatherApi {
         @SerialName("dt_txt") val dtTxt: String
     )
 
+    // Data for Air quality Index - Main screen
+    @Serializable
+    data class AQI(
+        @SerialName("coord") @Transient val coord: Int = 0,
+        @SerialName("list") val list: List<AQIList>
+    )
+
+    @Serializable
+    data class AQIList(
+        @SerialName("dt") @Transient val dt: Int = 0,
+        @SerialName("main") val main: AQIMain,
+        @SerialName("components") val components: AQIComponents
+    )
+
+    @Serializable
+    data class AQIMain(
+        @SerialName("aqi") val aqi: Int
+    )
+
+    @Serializable
+    data class AQIComponents(
+        @SerialName("co") val co: Double,
+        @SerialName("no") val no: Double,
+        @SerialName("no2") val no2: Double,
+        @SerialName("o3") val o3: Double,
+        @SerialName("so2") val so2: Double,
+        @SerialName("pm2_5") val pm2_5: Double,
+        @SerialName("pm10") val pm10: Double,
+        @SerialName("nh3") val nh3: Double
+    )
+
     private const val APIKEY = "6fc16ee5f99c053a61862db4ee092d94"
+    private var currLon = 0.0
+    private var currLat = 0.0
 
     suspend fun readMainData(city: String): HomeJsonData {
         val strUrlWeather = "https://api.openweathermap.org/data/2.5/weather?q=$city&units=metric&appid=$APIKEY"
@@ -137,6 +177,8 @@ object WeatherApi {
                     reader.close()
 
                     val jsonStr = response.toString()
+                    currLon = parseHomeJson(jsonStr).coord.lon
+                    currLat = parseHomeJson(jsonStr).coord.lat
                     parseHomeJson(jsonStr)
                 } else {
                     dummyData()
@@ -177,9 +219,38 @@ object WeatherApi {
         }
     }
 
-    fun dummyData(): HomeJsonData { //this function provides dummy data in case of failure
+    suspend fun readAQIData(): AQI {
+        val strUrlForecast = "https://api.openweathermap.org/data/2.5/air_pollution?lat=$currLat&lon=$currLon&appid=$APIKEY"
+        return withContext(Dispatchers.IO) {
+            try {
+                val url = URL(strUrlForecast)
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+
+                if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                    val reader = BufferedReader(InputStreamReader(connection.inputStream))
+                    val response = StringBuilder()
+                    var line: String?
+                    while (reader.readLine().also { line = it } != null) {
+                        response.append(line)
+                    }
+                    reader.close()
+
+                    val jsonStr = response.toString()
+                    parseAQIJson(jsonStr)
+                } else {
+                    dummyDataAQI()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                dummyDataAQI()
+            }
+        }
+    }
+
+    fun dummyData(): HomeJsonData { // placeholder data while app is loading
         return HomeJsonData(
-            coord = "",
+            coord = Coords(0.0, 0.0),
             base = "",
             weather = listOf(WeatherData(0, "", "", "01d")),
             main = MainData(0.0, 0.0, 0.0, 0.0, 0, 0),
@@ -195,7 +266,7 @@ object WeatherApi {
         )
     }
 
-    fun forecastDummyData(): ForecastJsonData {
+    fun forecastDummyData(): ForecastJsonData { // placeholder data while app is loading
         val temp = List(40) {ListData(0,
             MainData(0.0, 0.0, 0.0, 0.0, 0, 0),
             listOf(WeatherData(0, "", "", "01d")),
@@ -226,6 +297,21 @@ object WeatherApi {
         )
     }
 
+    fun dummyDataAQI(): AQI {
+        return AQI(
+            list = listOf(AQIList(main = AQIMain(0), components = AQIComponents(
+                co = 0.0,
+                no = 0.0,
+                no2 = 0.0,
+                o3 = 0.0,
+                so2 = 0.0,
+                pm2_5 = 0.0,
+                pm10 = 0.0,
+                nh3 = 0.0
+            )))
+        )
+    }
+
     private fun parseHomeJson(jsonString: String): HomeJsonData {
         val json = Json { ignoreUnknownKeys = true }
         return json.decodeFromString(jsonString)
@@ -233,6 +319,11 @@ object WeatherApi {
 
     private fun parseForecastJson(jsonString: String): ForecastJsonData {
         val json = Json { ignoreUnknownKeys = true }
+        return json.decodeFromString(jsonString)
+    }
+
+    private fun parseAQIJson(jsonString: String): AQI {
+        val json = Json {ignoreUnknownKeys = true }
         return json.decodeFromString(jsonString)
     }
 }

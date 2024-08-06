@@ -133,6 +133,22 @@ fun App(dataStore: DataStore, darkModeState: Boolean, cityState: String) {
         mutableStateOf(WeatherApi.dummyData())
     }
 
+    var aqiData by remember {
+        mutableStateOf(WeatherApi.dummyDataAQI())
+    }
+
+    var prevAQIData by remember {
+        mutableStateOf(aqiData)
+    }
+
+    var aqiIndex by remember {
+        mutableIntStateOf(0)
+    }
+
+    var aqiName by remember {
+        mutableStateOf("")
+    }
+
     var prevData by remember {
         mutableStateOf(homeData)
     }
@@ -193,13 +209,16 @@ fun App(dataStore: DataStore, darkModeState: Boolean, cityState: String) {
     // Enters on App start AND every time the user inputs a new city
     LaunchedEffect(cityState, refreshEffect) {
         prevData = homeData
+        prevAQIData = aqiData
         prevForecastData = forecastData
 
         homeData = WeatherApi.readMainData(cityState)
+        aqiData = WeatherApi.readAQIData()
         forecastData = WeatherApi.readForecastData(cityState)
 
         if (homeData == WeatherApi.dummyData()) { // In case of readData failure (i.e provided City does not exist), keep previous data
             homeData = prevData
+            aqiData = prevAQIData
             forecastData = prevForecastData
         }
         if (homeData.name != "")
@@ -233,6 +252,24 @@ fun App(dataStore: DataStore, darkModeState: Boolean, cityState: String) {
             "50d" -> currIcon = R.drawable._50d
             "50n" -> currIcon = R.drawable._50d
         }
+
+        // Update AQI state
+        when(aqiData.list[0].main.aqi) {
+            1 -> aqiName = "Good"
+            2 -> aqiName = "Fair"
+            3 -> aqiName = "Moderate"
+            4 -> aqiName = "Poor"
+            5 -> aqiName = "Very Poor"
+            0 -> aqiName = "-"
+        }
+
+        // Update AQI index
+        val aqi = AQI(
+            pm10 = aqiData.list[0].components.pm10,
+            pm2_5 = aqiData.list[0].components.pm2_5,
+            o3 = aqiData.list[0].components.o3,
+            no2 = aqiData.list[0].components.no2)
+        aqiIndex = aqi.getAQI()
     }
 
     Scaffold(
@@ -309,6 +346,8 @@ fun App(dataStore: DataStore, darkModeState: Boolean, cityState: String) {
                             Spacer(modifier = Modifier.height(120.dp))
                             SecondaryStats(
                                 data = homeData,
+                                aqiName = aqiName,
+                                aqiIndex = aqiIndex,
                                 formatter = formatter,
                                 updatedOnTime = updatedOnTime)
                         } else {
@@ -398,43 +437,52 @@ fun Forecast(data: WeatherApi.ForecastJsonData, state: PullRefreshState, refresh
                 .zIndex(1f),
             backgroundColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary)
-        //Spacer(modifier = Modifier.weight(1f))
-        Text("5 Day forecast", color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(10.dp))
         for (j in 0..< icons.size) {
-            ForecastItem(data, icons[j], j * 8, dayString[j], j)
+            ForecastItem(data, icons[j], j * 8, dayString[j])
         }
-        //Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
-fun ForecastItem(data: WeatherApi.ForecastJsonData, icon: Int, it: Int, day: String, j: Int) {
-    Surface(shape = MaterialTheme.shapes.large,
-        shadowElevation = 2.dp,
+fun ForecastItem(data: WeatherApi.ForecastJsonData, icon: Int, it: Int, day: String) {
+    Surface(shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
-        //color = MaterialTheme.colorScheme.surfaceColorAtElevation((j + 1).dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(5.dp)
-            .height(140.dp)) {
+            .height(150.dp)) {
         Column(verticalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.padding(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()) {
+                horizontalArrangement = Arrangement.Start,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(0.5f)) {
                 Image(painter = painterResource(id = icon),
-                    contentDescription = "Weather", modifier = Modifier.size(70.dp))
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(day, fontSize = MaterialTheme.typography.titleLarge.fontSize, color = MaterialTheme.colorScheme.onSurface)
-                Spacer(modifier = Modifier.width(20.dp))
-                Text(data.list[it].main.temp.roundToInt().toString() + "°C",
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize, color = MaterialTheme.colorScheme.onSurface)
+                    contentDescription = "Weather", modifier = Modifier.size(60.dp))
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(day, fontSize = MaterialTheme.typography.headlineSmall.fontSize, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Spacer(modifier = Modifier.weight(1f))
+                Text(data.list[it].main.temp.roundToInt().toString(),
+                    fontSize = MaterialTheme.typography.headlineSmall.fontSize, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text("°C", style = TextStyle(
+                    fontSize = 15.sp), modifier = Modifier
+                    .align(Alignment.Top)
+                    .padding(top = 16.dp),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Spacer(modifier = Modifier.weight(.1f))
             }
-            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(5.dp),
+                thickness = 2.dp,
+                color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+            )
+            Spacer(modifier = Modifier.height(5.dp))
             Row(verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()) {
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(0.5f)) {
                 Image(painterResource(id = R.drawable.thermometer), contentDescription = "real feel",
                     modifier = Modifier.size(30.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
                 Spacer(modifier = Modifier.width(5.dp))
@@ -494,7 +542,7 @@ fun Settings(checked: Boolean, dataStore: DataStore) {
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface)
         Text(
-            text = "Data provided by OpenWeatherMap.org",
+            text = "Data provided by OpenWeatherMap",
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
@@ -542,7 +590,7 @@ fun BottomBar(navController: NavController, checkScreen: (Unit) -> Unit) {
 @Composable
 fun InputText(input: String, onValueChange: (String) -> Unit, onDone: (Unit) -> Unit) {
     val focusManager = LocalFocusManager.current
-    OutlinedTextField(shape = MaterialTheme.shapes.large,
+    OutlinedTextField(shape = MaterialTheme.shapes.extraLarge,
         value = input,
         label = { Text(text = "Search a city..")},
         onValueChange = { onValueChange(it) },
@@ -630,11 +678,12 @@ fun PrimaryStats(data: WeatherApi.HomeJsonData,
 
 @Composable
 fun SecondaryStats(data: WeatherApi.HomeJsonData,
+                   aqiName: String,
+                   aqiIndex: Int,
                    formatter: DateTimeFormatter,
                    updatedOnTime: ZonedDateTime) {
     Row {
-        Surface(shape = MaterialTheme.shapes.large,
-            shadowElevation = 2.dp,
+        Surface(shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
             contentColor = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
@@ -648,8 +697,7 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
                 Text(text = "Feels like " + data.main.feelsLike.roundToInt().toString() + "°", color = MaterialTheme.colorScheme.onSurface)
             }
         }
-        Surface(shape = MaterialTheme.shapes.large,
-            shadowElevation = 2.dp,
+        Surface(shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
             contentColor = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
@@ -665,8 +713,7 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
         }
     }
     Row {
-        Surface(shape = MaterialTheme.shapes.large,
-            shadowElevation = 2.dp,
+        Surface(shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
             contentColor = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
@@ -768,8 +815,27 @@ fun SecondaryStats(data: WeatherApi.HomeJsonData,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface)
                 }
-            }
 
+            }
+        }
+    }
+    Surface(shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier
+            .padding(5.dp)
+            .fillMaxWidth()) {
+        Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Image(painterResource(id = R.drawable.aqi), contentDescription = "aqi",
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                modifier = Modifier.size(30.dp))
+            Text(text = "AQI $aqiIndex", color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(10.dp))
+            Text(text = aqiName, color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .padding(10.dp)
+                    .weight(0.3f),
+                textAlign = TextAlign.End)
         }
     }
 }

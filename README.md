@@ -14,27 +14,25 @@ API used: [OpenWeatherMap.org](https://openweathermap.org/).
 
 ## Features
 
-### Three screens
-
-- **Current weather screen**
+- **Current weather**
     - Real feel
     - Humidity
     - Wind direction and speed
     - Pressure
     - Visibility
-- **Five day forecast screen**
-    - Next five days forecast for selected city
-- **Settings screen**
+    - Air Quality Index
+- **Five day forecast**
+    - Five day forecast for selected city
+- **Settings**
     - Dark - light mode selection
 
-### Other
+And..
 
 - Pull to refresh
 - Weatherly saves the last city the user selected
 
 ## To do
 
-- Add air pollution data
 - Fix an issue where light theme does not apply correctly on some devices
 - Code improvements and refactoring
 
