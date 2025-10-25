@@ -1,5 +1,7 @@
 package com.example.weatherly
 
+import android.annotation.SuppressLint
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
@@ -15,6 +17,7 @@ import java.net.URL
 object WeatherApi {
 
     // Data for Main screen
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class HomeJsonData(
         @SerialName("coord") val coord: Coords,
@@ -34,17 +37,20 @@ object WeatherApi {
         @SerialName("cod") val cod: Int,
     )
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class Coords(
         @SerialName("lon") val lon: Double,
         @SerialName("lat") val lat: Double
     )
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class CloudsData(
         @SerialName("all") val all: Int
     )
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class WeatherData(
         @SerialName("id") val id: Int,
@@ -53,6 +59,7 @@ object WeatherApi {
         @SerialName("icon") val icon: String
     )
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class MainData(
         @SerialName("temp") val temp: Double,
@@ -66,6 +73,7 @@ object WeatherApi {
         @SerialName("temp_kf") @Transient val tempKf: Int = 0
     )
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class WindData(
         @SerialName("speed") val speed: Double,
@@ -73,6 +81,7 @@ object WeatherApi {
         @SerialName("gust") @Transient val gust: Double = 0.0
     )
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class SysData(
         @SerialName("type") val type: Int,
@@ -82,6 +91,7 @@ object WeatherApi {
         @SerialName("sunset") val sunset: Int,
     )
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class CloudData(
         @SerialName("all") val all: Double,
@@ -89,6 +99,7 @@ object WeatherApi {
 
 
     // Data for Forecast Screen
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class ForecastJsonData(
         @SerialName("cod") @Transient val cod: String = "",
@@ -97,6 +108,7 @@ object WeatherApi {
         @SerialName("list") val list: List<ListData>,
         @SerialName("city") val city: CityData)
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class CityData(
         @SerialName("id") val id: Int,
@@ -109,6 +121,7 @@ object WeatherApi {
         @SerialName("sunset") val sunset: Int,
     )
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class ListData(
         @SerialName("dt") val dt: Int,
@@ -117,7 +130,7 @@ object WeatherApi {
         @SerialName("clouds") val clouds: CloudData,
         @SerialName("wind") val wind: WindData,
         @SerialName("visibility") val visibility: Int,
-        @SerialName("pop") val pop: Double,
+        @SuppressLint("UnsafeOptInUsageError") @SerialName("pop") val pop: Double,
         @SerialName("rain") @Transient val rain: Int = 0,
         @SerialName("snow") @Transient val snow: Int = 0,
         @SerialName("sys") @Transient val sys: Int = 0,
@@ -125,12 +138,14 @@ object WeatherApi {
     )
 
     // Data for Air quality Index - Main screen
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class AQI(
         @SerialName("coord") @Transient val coord: Int = 0,
         @SerialName("list") val list: List<AQIList>
     )
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class AQIList(
         @SerialName("dt") @Transient val dt: Int = 0,
@@ -138,11 +153,13 @@ object WeatherApi {
         @SerialName("components") val components: AQIComponents
     )
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class AQIMain(
         @SerialName("aqi") val aqi: Int
     )
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Serializable
     data class AQIComponents(
         @SerialName("co") val co: Double,
@@ -184,7 +201,7 @@ object WeatherApi {
                     dummyData()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("WeatherApi", "Error fetching weather data: ${e.message}")
                 dummyData()
             }
         }
@@ -213,7 +230,7 @@ object WeatherApi {
                     forecastDummyData()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("WeatherApi", "Error fetching forecast data: ${e.message}")
                 forecastDummyData()
             }
         }
@@ -242,7 +259,7 @@ object WeatherApi {
                     dummyDataAQI()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("WeatherApi", "Error fetching AQI data: ${e.message}")
                 dummyDataAQI()
             }
         }
